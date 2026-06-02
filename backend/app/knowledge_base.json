@@ -1,0 +1,825 @@
+[
+  {
+    "id": "KB-001",
+    "category": "OSPF",
+    "name": "OSPF Area Mismatch",
+    "priority": 1,
+    "conditions": {
+      "ospf_neighbor_down": true,
+      "log_contains_area_mismatch": true
+    },
+    "severity": "High",
+    "issue": "OSPF Adjacency Failure due to Area Mismatch",
+    "possible_causes": [
+      "Mismatched OSPF area configuration on connecting interfaces",
+      "Network statement misconfiguration under router ospf"
+    ],
+    "remediation": "Modify OSPF area configuration on the interfaces of both routers so they match (e.g., area 0 on both sides).",
+    "validation_commands": ["show running-config interface <if_name>", "show ip ospf neighbor", "show ip ospf interface <if_name>"]
+  },
+  {
+    "id": "KB-002",
+    "category": "OSPF",
+    "name": "OSPF Authentication Mismatch",
+    "priority": 1,
+    "conditions": {
+      "ospf_neighbor_down": true,
+      "log_contains_auth_mismatch": true
+    },
+    "severity": "High",
+    "issue": "OSPF Adjacency Failure due to Authentication Mismatch",
+    "possible_causes": [
+      "Mismatched MD5 authentication keys",
+      "One side is configured for MD5 authentication while the other is not"
+    ],
+    "remediation": "Sync OSPF authentication password keys on both interfaces. Check if both sides have 'ip ospf authentication message-digest' and 'ip ospf message-digest-key 1 md5 <key>'.",
+    "validation_commands": ["show running-config interface <if_name>", "show ip ospf neighbor"]
+  },
+  {
+    "id": "KB-003",
+    "category": "Interface",
+    "name": "Interface Administratively Shutdown",
+    "priority": 1,
+    "conditions": {
+      "interface_admin_down": true
+    },
+    "severity": "High",
+    "issue": "Interface Administratively Shutdown",
+    "possible_causes": [
+      "The interface is explicitly shut down via the 'shutdown' command",
+      "New interface provisioned but not enabled yet"
+    ],
+    "remediation": "Enter interface configuration mode and execute the 'no shutdown' command to enable the port.",
+    "validation_commands": ["show interface <if_name>", "show interface status"]
+  },
+  {
+    "id": "KB-004",
+    "category": "Routing",
+    "name": "Missing Static Route",
+    "priority": 2,
+    "conditions": {
+      "missing_route_to_target": true,
+      "ping_fails": true
+    },
+    "severity": "High",
+    "issue": "Routing Path Failure due to Missing Static Route",
+    "possible_causes": [
+      "Static route to target subnet was deleted or never added on transit routers",
+      "Dynamic routing protocol did not redistribute static routes"
+    ],
+    "remediation": "Configure a static route using 'ip route <subnet> <mask} <next_hop>' or configure dynamic routing to advertise the subnet.",
+    "validation_commands": ["show ip route", "show running-config | include ip route"]
+  },
+  {
+    "id": "KB-005",
+    "category": "ACL",
+    "name": "Traffic Blocked by Access Control List",
+    "priority": 1,
+    "conditions": {
+      "acl_hit_incrementing": true,
+      "ping_blocked_by_acl": true
+    },
+    "severity": "High",
+    "issue": "Security Access Denied by ACL Policy",
+    "possible_causes": [
+      "An access control list (ACL) contains a deny statement matching the source/destination traffic",
+      "Implicit deny at the end of the access control list blocking traffic"
+    ],
+    "remediation": "Modify the ACL to permit the required traffic, or bind the correct ACL to the interface.",
+    "validation_commands": ["show access-lists", "show running-config interface <if_name>"]
+  },
+  {
+    "id": "KB-006",
+    "category": "Performance",
+    "name": "Control Plane High CPU Exhaustion",
+    "priority": 1,
+    "conditions": {
+      "cpu_usage_high": true
+    },
+    "severity": "High",
+    "issue": "Device Control Plane Exhaustion (High CPU)",
+    "possible_causes": [
+      "Excessive network interrupts due to packet forwarding issues (IP Input)",
+      "OSPF SPF calculation loop or routing loops",
+      "Broadcast storm or heavy SSH/snmp pollers"
+    ],
+    "remediation": "Identify the high CPU process. If it is 'IP Input', verify if fast switching / CEF is enabled. If 'OSPF', check for flap networks. Rate-limit control plane traffic using CoPP.",
+    "validation_commands": ["show processes cpu sorted", "show ip route", "show ip cef"]
+  },
+  {
+    "id": "KB-007",
+    "category": "Performance",
+    "name": "Low Free Processor Memory",
+    "priority": 2,
+    "conditions": {
+      "memory_usage_high": true
+    },
+    "severity": "High",
+    "issue": "System Low Free Memory / Buffer Leak",
+    "possible_causes": [
+      "Memory leak in system process",
+      "Oversized routing table for device hardware memory profile"
+    ],
+    "remediation": "Review show memory statistics. Upgrade system RAM, optimize routing table sizing (prefix lists/summarization), or upgrade IOS firmware to resolve potential memory leak.",
+    "validation_commands": ["show memory statistics", "show processes memory sorted"]
+  },
+  {
+    "id": "KB-008",
+    "category": "OSPF",
+    "name": "OSPF MTU Mismatch",
+    "priority": 2,
+    "conditions": {
+      "ospf_state_exstart": true
+    },
+    "severity": "Medium",
+    "issue": "OSPF Stuck in EXSTART/EXCHANGE State due to MTU Mismatch",
+    "possible_causes": [
+      "Mismatched Maximum Transmission Unit (MTU) sizes on connecting interfaces"
+    ],
+    "remediation": "Adjust interface MTU sizes to match on both sides using 'ip mtu <size>' or use 'ip ospf mtu-ignore' under interface config.",
+    "validation_commands": ["show ip ospf interface <if_name>", "show interface <if_name>"]
+  },
+  {
+    "id": "KB-009",
+    "category": "OSPF",
+    "name": "OSPF Hello/Dead Timer Mismatch",
+    "priority": 2,
+    "conditions": {
+      "ospf_timer_mismatch": true
+    },
+    "severity": "High",
+    "issue": "OSPF Adjacency Failure due to Timer Mismatch",
+    "possible_causes": [
+      "Mismatched hello-interval or dead-interval values on connecting interfaces"
+    ],
+    "remediation": "Align hello and dead intervals on both interfaces using 'ip ospf hello-interval' and 'ip ospf dead-interval'.",
+    "validation_commands": ["show ip ospf interface <if_name>"]
+  },
+  {
+    "id": "KB-010",
+    "category": "Interface",
+    "name": "Duplex Mismatch",
+    "priority": 2,
+    "conditions": {
+      "interface_crc_errors_high": true,
+      "interface_collisions_high": true
+    },
+    "severity": "Medium",
+    "issue": "Interface Duplex Mismatch",
+    "possible_causes": [
+      "One side is configured as half-duplex and the other side is configured as full-duplex"
+    ],
+    "remediation": "Configure both ends of the Ethernet link to auto-negotiate, or hardcode both to full duplex.",
+    "validation_commands": ["show interface <if_name>", "show interface status"]
+  },
+  {
+    "id": "KB-011",
+    "category": "Interface",
+    "name": "Input Queue Drops",
+    "priority": 3,
+    "conditions": {
+      "interface_input_drops": true
+    },
+    "severity": "Medium",
+    "issue": "Buffer Saturation (Input Queue Drops)",
+    "possible_causes": [
+      "Device receiving packets faster than the CPU can process them",
+      "Lack of hardware CEF caching"
+    ],
+    "remediation": "Verify that CEF (Cisco Express Forwarding) is enabled globally. Rate limit incoming traffic or configure QoS queuing policies.",
+    "validation_commands": ["show ip cef", "show interface <if_name>"]
+  },
+  {
+    "id": "KB-012",
+    "category": "Interface",
+    "name": "High CRC Errors",
+    "priority": 2,
+    "conditions": {
+      "interface_crc_errors_high": true
+    },
+    "severity": "Medium",
+    "issue": "Physical Layer Frame Corruption (CRC Errors)",
+    "possible_causes": [
+      "Faulty physical Ethernet cable or transceiver SFP",
+      "Duplex mismatch or electromagnetic interference"
+    ],
+    "remediation": "Swap physical cables and transceiver modules. Ensure duplex match.",
+    "validation_commands": ["show interface <if_name>"]
+  },
+  {
+    "id": "KB-013",
+    "category": "Routing",
+    "name": "Routing Loop Detected",
+    "priority": 1,
+    "conditions": {
+      "traceroute_loop": true
+    },
+    "severity": "Critical",
+    "issue": "Routing Loop Detected",
+    "possible_causes": [
+      "Incorrect static routes pointing back to upstream routers",
+      "Redistribution loops between OSPF and BGP"
+    ],
+    "remediation": "Analyze path via traceroute, remove duplicate static routes, and implement route filters / tag-based filtering on redistribution nodes.",
+    "validation_commands": ["traceroute <target>", "show ip route"]
+  },
+  {
+    "id": "KB-014",
+    "category": "VLAN",
+    "name": "VLAN Pruning Mismatch",
+    "priority": 2,
+    "conditions": {
+      "vlan_missing": true
+    },
+    "severity": "High",
+    "issue": "Layer 2 Connection Drop (Missing VLAN)",
+    "possible_causes": [
+      "Required VLAN is not allowed or was pruned on the 802.1Q trunk interface",
+      "VLAN does not exist in the switch database"
+    ],
+    "remediation": "Create the VLAN in global config and allow it on the trunk link using 'switchport trunk allowed vlan add <vlan_id>'.",
+    "validation_commands": ["show vlan brief", "show interfaces trunk"]
+  },
+  {
+    "id": "KB-015",
+    "category": "NAT",
+    "name": "NAT Pool Exhausted",
+    "priority": 2,
+    "conditions": {
+      "nat_pool_exhausted": true
+    },
+    "severity": "High",
+    "issue": "IP Address Translation Exhaustion (NAT Pool)",
+    "possible_causes": [
+      "NAT pool too small for active network users",
+      "Lack of Port Address Translation (PAT/overload) configuration"
+    ],
+    "remediation": "Increase the NAT pool address range, decrease translation timeouts, or configure PAT overload on the external interface.",
+    "validation_commands": ["show ip nat statistics", "show ip nat translations"]
+  },
+  {
+    "id": "KB-016",
+    "category": "Hardware",
+    "name": "Transceiver RX Power Low",
+    "priority": 3,
+    "conditions": {
+      "optical_rx_low": true
+    },
+    "severity": "Medium",
+    "issue": "Optical SFP Signal Loss (Low RX Power)",
+    "possible_causes": [
+      "Dirty fiber optic patch cable connector",
+      "Failing optical transceiver module"
+    ],
+    "remediation": "Clean fiber connectors using optical cleaning swabs. Replace the fiber patch cable or the SFP transceiver.",
+    "validation_commands": ["show interfaces transceiver detail"]
+  },
+  {
+    "id": "KB-017",
+    "category": "Routing",
+    "name": "Next Hop Unreachable",
+    "priority": 1,
+    "conditions": {
+      "next_hop_unreachable": true
+    },
+    "severity": "High",
+    "issue": "Routing Resolution Failure (Next Hop Unreachable)",
+    "possible_causes": [
+      "Layer 2 ARP resolution failure for next hop IP",
+      "Direct interface connected to the next hop is down"
+    ],
+    "remediation": "Ensure physical interface is up, and verify basic ping reachability to next-hop IP. Check ARP database.",
+    "validation_commands": ["show ip arp", "ping <next_hop>"]
+  },
+  {
+    "id": "KB-018",
+    "category": "BGP",
+    "name": "BGP Neighbor Down",
+    "priority": 1,
+    "conditions": {
+      "bgp_neighbor_down": true
+    },
+    "severity": "Critical",
+    "issue": "External Path Access Loss (BGP Down)",
+    "possible_causes": [
+      "TCP port 179 blocked by firewall or ACL",
+      "Mismatched AS numbers, peer IP, or password authentication"
+    ],
+    "remediation": "Check ping connectivity. Verify BGP peer configuration. Ensure TCP port 179 is allowed in ACLs.",
+    "validation_commands": ["show ip bgp summary", "show ip bgp neighbors"]
+  },
+  {
+    "id": "KB-019",
+    "category": "DHCP",
+    "name": "DHCP Pool Exhaustion",
+    "priority": 2,
+    "conditions": {
+      "dhcp_pool_exhausted": true
+    },
+    "severity": "High",
+    "issue": "Dynamic IP Allocation Failure (DHCP Pool Exhausted)",
+    "possible_causes": [
+      "Address range in DHCP pool is smaller than actual network client density",
+      "Lease time set too high causing address holding"
+    ],
+    "remediation": "Expand DHCP network scope pool range, reduce lease durations, and clear conflicts using 'clear ip dhcp binding *'.",
+    "validation_commands": ["show ip dhcp pool", "show ip dhcp binding"]
+  },
+  {
+    "id": "KB-020",
+    "category": "Security",
+    "name": "SSH Login Brute Force",
+    "priority": 2,
+    "conditions": {
+      "ssh_brute_force_detected": true
+    },
+    "severity": "High",
+    "issue": "SSH Security Alert (Brute Force)",
+    "possible_causes": [
+      "Active scan or script trying to guess SSH logins on the device"
+    ],
+    "remediation": "Implement Line VTY access limits using ACL, restrict SSH ports using Control Plane Policing (CoPP), or configure authentication blockout times.",
+    "validation_commands": ["show logging", "show users"]
+  },
+  {
+    "id": "KB-021",
+    "category": "OSPF",
+    "name": "OSPF Area Type Mismatch",
+    "priority": 2,
+    "conditions": {
+      "ospf_area_type_mismatch": true
+    },
+    "severity": "High",
+    "issue": "OSPF Type Mismatch",
+    "possible_causes": [
+      "One router is configured for Stub/NSSA area while the neighbor is configured for normal Area"
+    ],
+    "remediation": "Ensure both OSPF routers have the exact same area flags (e.g. stub or nssa) under 'router ospf'.",
+    "validation_commands": ["show ip ospf", "show running-config | sec router ospf"]
+  },
+  {
+    "id": "KB-022",
+    "category": "OSPF",
+    "name": "OSPF Router ID Conflict",
+    "priority": 2,
+    "conditions": {
+      "ospf_rid_conflict": true
+    },
+    "severity": "High",
+    "issue": "OSPF ID Collision",
+    "possible_causes": [
+      "Two routers in the same OSPF domain share the same router-id"
+    ],
+    "remediation": "Manually configure a unique router ID using the 'router-id <id>' command in router OSPF configuration mode.",
+    "validation_commands": ["show ip ospf", "show running-config | include router-id"]
+  },
+  {
+    "id": "KB-023",
+    "category": "Interface",
+    "name": "Gigabit Ethernet Link Flapping",
+    "priority": 1,
+    "conditions": {
+      "interface_flapping": true
+    },
+    "severity": "High",
+    "issue": "Gigabit Ethernet Link Flapping",
+    "possible_causes": [
+      "Defective hardware interface port or physical patch cord cable",
+      "Unstable link negotiation or SFP issue"
+    ],
+    "remediation": "Replace physical cables. Turn off auto-negotiation if it's unstable, and configure hardcoded speed and duplex.",
+    "validation_commands": ["show interface <if_name>", "show logging"]
+  },
+  {
+    "id": "KB-024",
+    "category": "Routing",
+    "name": "Default Route Missing",
+    "priority": 2,
+    "conditions": {
+      "default_route_missing": true
+    },
+    "severity": "High",
+    "issue": "Internet Reachability Loss (No Gateway)",
+    "possible_causes": [
+      "Default route 0.0.0.0/0 not propagated or deleted on the gateway router"
+    ],
+    "remediation": "Add static default route pointing to ISP next hop, or propagate OSPF default route using 'default-information originate'.",
+    "validation_commands": ["show ip route 0.0.0.0"]
+  },
+  {
+    "id": "KB-025",
+    "category": "Security",
+    "name": "Unsecure Protocol Active",
+    "priority": 3,
+    "conditions": {
+      "telnet_active": true
+    },
+    "severity": "Low",
+    "issue": "Security Compliance Failure (Telnet Enabled)",
+    "possible_causes": [
+      "Telnet is enabled on Line VTY ports instead of SSH only"
+    ],
+    "remediation": "Disable Telnet and force SSH using 'transport input ssh' under Line VTY 0 4 configuration.",
+    "validation_commands": ["show running-config | sec line vty"]
+  },
+  {
+    "id": "KB-026",
+    "category": "DHCP",
+    "name": "DHCP Rogue Server Detected",
+    "priority": 1,
+    "conditions": {
+      "rogue_dhcp_detected": true
+    },
+    "severity": "Critical",
+    "issue": "MitM Risk (Rogue DHCP Server)",
+    "possible_causes": [
+      "Unauthorized DHCP server plugged into client VLAN broadcasting incorrect gateways"
+    ],
+    "remediation": "Enable DHCP Snooping globally and configure ports to trusted/untrusted to block unauthorized DHCP responses.",
+    "validation_commands": ["show ip dhcp snooping"]
+  },
+  {
+    "id": "KB-027",
+    "category": "NAT",
+    "name": "Inside Interface Missing NAT Configuration",
+    "priority": 2,
+    "conditions": {
+      "nat_inside_missing": true
+    },
+    "severity": "High",
+    "issue": "NAT Traffic Drop (Missing Inside Flag)",
+    "possible_causes": [
+      "The 'ip nat inside' statement is missing on the client-facing local interface"
+    ],
+    "remediation": "Access interface configuration for client subnet and enter the 'ip nat inside' command.",
+    "validation_commands": ["show running-config interface <if_name>"]
+  },
+  {
+    "id": "KB-028",
+    "category": "NAT",
+    "name": "Outside Interface Missing NAT Configuration",
+    "priority": 2,
+    "conditions": {
+      "nat_outside_missing": true
+    },
+    "severity": "High",
+    "issue": "NAT Traffic Drop (Missing Outside Flag)",
+    "possible_causes": [
+      "The 'ip nat outside' statement is missing on the WAN external interface"
+    ],
+    "remediation": "Access interface configuration for the external WAN and enter the 'ip nat outside' command.",
+    "validation_commands": ["show running-config interface <if_name>"]
+  },
+  {
+    "id": "KB-029",
+    "category": "VLAN",
+    "name": "Native VLAN Mismatch",
+    "priority": 2,
+    "conditions": {
+      "native_vlan_mismatch": true
+    },
+    "severity": "Medium",
+    "issue": "Native VLAN Mismatch (802.1Q)",
+    "possible_causes": [
+      "Trunk port native VLAN is configured differently on local and neighbor switches"
+    ],
+    "remediation": "Change Native VLAN on trunk interface to match using 'switchport trunk native vlan <id>'.",
+    "validation_commands": ["show interfaces trunk", "show logging"]
+  },
+  {
+    "id": "KB-030",
+    "category": "Security",
+    "name": "SNMP Community String Default",
+    "priority": 3,
+    "conditions": {
+      "snmp_default_string": true
+    },
+    "severity": "Medium",
+    "issue": "SNMP Default String (Public/Private)",
+    "possible_causes": [
+      "Device configured with common default strings like 'public' or 'private'"
+    ],
+    "remediation": "Remove default strings and create custom secure strings with read-only/write access permissions.",
+    "validation_commands": ["show running-config | include snmp-server"]
+  },
+  {
+    "id": "KB-031",
+    "category": "BGP",
+    "name": "BGP Path MTU Discovery Issue",
+    "priority": 3,
+    "conditions": {
+      "bgp_stuck_active": true
+    },
+    "severity": "Medium",
+    "issue": "BGP Stuck in Active state",
+    "possible_causes": [
+      "MTU fragmentation drops TCP packets during large BGP table updates"
+    ],
+    "remediation": "Configure TCP path MTU discovery under BGP configuration or hardcode lower TCP MSS values.",
+    "validation_commands": ["show ip bgp neighbors"]
+  },
+  {
+    "id": "KB-032",
+    "category": "OSPF",
+    "name": "OSPF Broadcast Network No DR Elected",
+    "priority": 2,
+    "conditions": {
+      "ospf_no_dr": true
+    },
+    "severity": "High",
+    "issue": "OSPF DR Election Failure",
+    "possible_causes": [
+      "All router interfaces in the subnet are configured with priority 0"
+    ],
+    "remediation": "Change OSPF priority on at least one router interface to a value greater than 0 using 'ip ospf priority <val>'.",
+    "validation_commands": ["show ip ospf interface <if_name>"]
+  },
+  {
+    "id": "KB-033",
+    "category": "OSPF",
+    "name": "OSPF Passive Interface Blocking Hellos",
+    "priority": 2,
+    "conditions": {
+      "ospf_passive_mismatch": true
+    },
+    "severity": "High",
+    "issue": "OSPF Passive Interface Error",
+    "possible_causes": [
+      "Connecting interface between routers is set to 'passive-interface' under OSPF"
+    ],
+    "remediation": "Remove passive interface command on connecting link using 'no passive-interface <if_name>' under OSPF config.",
+    "validation_commands": ["show running-config | sec router ospf"]
+  },
+  {
+    "id": "KB-034",
+    "category": "Routing",
+    "name": "Suboptimal Route due to Admin Distance",
+    "priority": 3,
+    "conditions": {
+      "suboptimal_routing_ad": true
+    },
+    "severity": "Medium",
+    "issue": "Suboptimal Routing Path (Admin Distance)",
+    "possible_causes": [
+      "Static route overshadowing dynamic OSPF route due to default lower AD (1 vs 110)"
+    ],
+    "remediation": "Configure floating static route with AD greater than 110 (e.g. 120) or fix metric advertisements in OSPF.",
+    "validation_commands": ["show ip route"]
+  },
+  {
+    "id": "KB-035",
+    "category": "Routing",
+    "name": "FIB Table Overflow",
+    "priority": 2,
+    "conditions": {
+      "fib_table_full": true
+    },
+    "severity": "Critical",
+    "issue": "Forwarding Information Base (FIB) Limit Exceeded",
+    "possible_causes": [
+      "Device hardware TCAM table exhausted due to too many routing prefixes"
+    ],
+    "remediation": "Summarize routing table prefixes or filter unnecessary external paths at boundaries.",
+    "validation_commands": ["show platform hardware capacity"]
+  },
+  {
+    "id": "KB-036",
+    "category": "VLAN",
+    "name": "VLAN Trunking Protocol Mismatch",
+    "priority": 3,
+    "conditions": {
+      "vtp_mismatch": true
+    },
+    "severity": "Medium",
+    "issue": "VLAN Database Out of Sync (VTP Mismatch)",
+    "possible_causes": [
+      "Mismatched VTP domain, passwords, or revision numbers"
+    ],
+    "remediation": "Configure correct matching VTP domain name and password or change VTP mode to transparent/off.",
+    "validation_commands": ["show vtp status"]
+  },
+  {
+    "id": "KB-037",
+    "category": "Security",
+    "name": "Control Plane Storm Detected",
+    "priority": 1,
+    "conditions": {
+      "broadcast_storm": true
+    },
+    "severity": "Critical",
+    "issue": "Layer 2 Broadcast Storm",
+    "possible_causes": [
+      "Spanning Tree Loop or broken L2 loop prevention protocol"
+    ],
+    "remediation": "Verify spanning tree status, look for blocking ports, enable storm-control on switch interfaces.",
+    "validation_commands": ["show spanning-tree", "show interfaces counters storm-control"]
+  },
+  {
+    "id": "KB-038",
+    "category": "Security",
+    "name": "NTP Time Out of Sync",
+    "priority": 3,
+    "conditions": {
+      "ntp_out_of_sync": true
+    },
+    "severity": "Low",
+    "issue": "Log Timeline Correlation Failure (NTP Desync)",
+    "possible_causes": [
+      "NTP server unreachable or security firewall blocking UDP port 123"
+    ],
+    "remediation": "Add a reachable NTP server under 'ntp server <ip>' and check UDP 123 firewall rules.",
+    "validation_commands": ["show ntp status", "show ntp associations"]
+  },
+  {
+    "id": "KB-039",
+    "category": "Interface",
+    "name": "EtherChannel PAgP/LACP Mismatch",
+    "priority": 2,
+    "conditions": {
+      "etherchannel_down": true
+    },
+    "severity": "High",
+    "issue": "Link Aggregation Failure (EtherChannel Down)",
+    "possible_causes": [
+      "Mismatched active/passive mode or mismatched protocols on channel group"
+    ],
+    "remediation": "Match EtherChannel protocol on both switches. Set both ports to active LACP using 'channel-group 1 mode active'.",
+    "validation_commands": ["show etherchannel summary", "show lacp neighbor"]
+  },
+  {
+    "id": "KB-040",
+    "category": "DHCP",
+    "name": "DHCP Helper Address Missing",
+    "priority": 2,
+    "conditions": {
+      "dhcp_helper_missing": true
+    },
+    "severity": "High",
+    "issue": "Client IP Request Drop (DHCP Helper Missing)",
+    "possible_causes": [
+      "Missing 'ip helper-address <dhcp_server_ip>' command on L3 interface serving clients"
+    ],
+    "remediation": "Add the DHCP server target under the L3 SVI or physical interface that is the gateway for client hosts.",
+    "validation_commands": ["show running-config interface <if_name>"]
+  },
+  {
+    "id": "KB-041",
+    "category": "Security",
+    "name": "Local Enable Secret Missing",
+    "priority": 3,
+    "conditions": {
+      "enable_secret_missing": true
+    },
+    "severity": "Medium",
+    "issue": "Security Risk (No Enable Secret)",
+    "possible_causes": [
+      "Router privileged exec access is not protected by encrypted secret"
+    ],
+    "remediation": "Configure an encrypted enable password using the 'enable secret <password>' command.",
+    "validation_commands": ["show running-config | include enable secret"]
+  },
+  {
+    "id": "KB-042",
+    "category": "OSPF",
+    "name": "OSPF Interface Network Type Mismatch",
+    "priority": 2,
+    "conditions": {
+      "ospf_network_type_mismatch": true
+    },
+    "severity": "High",
+    "issue": "OSPF Neighbors Stuck in 2-WAY (DR/BDR elected when not expected)",
+    "possible_causes": [
+      "One side is configured as OSPF point-to-point and the other side as broadcast"
+    ],
+    "remediation": "Align the network type on both sides using 'ip ospf network broadcast' or 'ip ospf network point-to-point'.",
+    "validation_commands": ["show ip ospf interface <if_name>"]
+  },
+  {
+    "id": "KB-043",
+    "category": "VLAN",
+    "name": "Spanning Tree Bridge Loop",
+    "priority": 1,
+    "conditions": {
+      "spanning_tree_disabled": true
+    },
+    "severity": "Critical",
+    "issue": "High Packet Storm (Spanning Tree Disabled)",
+    "possible_causes": [
+      "Spanning Tree is disabled on a VLAN containing redundant bridge links"
+    ],
+    "remediation": "Enable spanning-tree globally for the affected VLAN using 'spanning-tree vlan <vlan_id>'.",
+    "validation_commands": ["show spanning-tree vlan <vlan_id>"]
+  },
+  {
+    "id": "KB-044",
+    "category": "Hardware",
+    "name": "High Core Temperature Warning",
+    "priority": 2,
+    "conditions": {
+      "device_temp_critical": true
+    },
+    "severity": "High",
+    "issue": "Hardware Component Degradation (High Temperature)",
+    "possible_causes": [
+      "Faulty chassis fan tray or dust accumulation blocking exhaust vents"
+    ],
+    "remediation": "Replace faulty cooling fans, clean filters, or check climate control in rack server room.",
+    "validation_commands": ["show environment temperature", "show environment status"]
+  },
+  {
+    "id": "KB-045",
+    "category": "Hardware",
+    "name": "Power Supply Module Failed",
+    "priority": 2,
+    "conditions": {
+      "psu_failed": true
+    },
+    "severity": "High",
+    "issue": "Power Redundancy Lost (PSU Failure)",
+    "possible_causes": [
+      "A hardware fault on one of the redundant power supplies"
+    ],
+    "remediation": "Replace defective hot-swappable power supply unit. Verify electrical grid input socket power source.",
+    "validation_commands": ["show environment power"]
+  },
+  {
+    "id": "KB-046",
+    "category": "BGP",
+    "name": "BGP AS Number Misconfigured",
+    "priority": 2,
+    "conditions": {
+      "bgp_as_mismatch": true
+    },
+    "severity": "High",
+    "issue": "BGP Peer Connection Reject",
+    "possible_causes": [
+      "The local router configuration contains a mismatched remote-as number for the peer"
+    ],
+    "remediation": "Correct the remote-as assignment in 'router bgp' to match peer's local autonomous system number.",
+    "validation_commands": ["show ip bgp summary", "show running-config | sec router bgp"]
+  },
+  {
+    "id": "KB-047",
+    "category": "Security",
+    "name": "SNMP Unencrypted Protocol (v1/v2c)",
+    "priority": 3,
+    "conditions": {
+      "snmp_unencrypted": true
+    },
+    "severity": "Low",
+    "issue": "Vulnerability Risk (Insecure SNMP)",
+    "possible_causes": [
+      "Using SNMP version 1 or 2c which transmits data in cleartext"
+    ],
+    "remediation": "Upgrade monitoring deployment to SNMP version 3 which supports strong SHA/AES cryptographic auth and encryption.",
+    "validation_commands": ["show running-config | include snmp-server"]
+  },
+  {
+    "id": "KB-048",
+    "category": "VLAN",
+    "name": "Switchport Access VLAN Missing",
+    "priority": 2,
+    "conditions": {
+      "access_vlan_missing": true
+    },
+    "severity": "High",
+    "issue": "Layer 2 Isolation (Access VLAN Missing)",
+    "possible_causes": [
+      "Access port configured to use a VLAN that has been deleted or not created"
+    ],
+    "remediation": "Create the access VLAN in switch config mode using 'vlan <vlan_id>'.",
+    "validation_commands": ["show vlan brief", "show interface switchport"]
+  },
+  {
+    "id": "KB-049",
+    "category": "NAT",
+    "name": "Dynamic Overload ACL Missing",
+    "priority": 2,
+    "conditions": {
+      "nat_acl_missing": true
+    },
+    "severity": "High",
+    "issue": "Dynamic Translation Failure (NAT ACL Missing)",
+    "possible_causes": [
+      "The Access Control List bound to the NAT statement does not exist or has no rules"
+    ],
+    "remediation": "Verify and define the standard ACL matching local IP subnets to be translated by dynamic PAT.",
+    "validation_commands": ["show ip nat statistics", "show access-lists"]
+  },
+  {
+    "id": "KB-050",
+    "category": "Performance",
+    "name": "High Ping RTT Latency",
+    "priority": 2,
+    "conditions": {
+      "ping_rtt_high": true
+    },
+    "severity": "Medium",
+    "issue": "High Path Latency",
+    "possible_causes": [
+      "Physical link congestion, heavy packet buffer queues, or control plane exhaustion"
+    ],
+    "remediation": "Deploy Traffic Shaping/Policing, increase link bandwidth, or isolate traffic hogging bandwidth.",
+    "validation_commands": ["ping <ip>", "show interfaces <if_name>"]
+  }
+]
